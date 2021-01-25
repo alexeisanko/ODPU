@@ -160,6 +160,7 @@ def optimization_data(data):
 
 # TODO Нужно исправить поиск по Адресу, так как он не всегда реагирует на проверку if is None
     for i, j in brute_force(len(data.index), len(data.columns)):
+        print(data.iloc[i, j])
         if data.iloc[i, j] is None:
             continue
         if 'Адрес' in data.iloc[i, j]:
