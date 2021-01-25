@@ -160,8 +160,8 @@ def optimization_data(data):
 
 # TODO Нужно исправить поиск по Адресу, так как он не всегда реагирует на проверку if is None
     for i, j in brute_force(len(data.index), len(data.columns)):
-        print(data.iloc[i, j])
-        if data.iloc[i, j] is None:
+        if type(data.iloc[i, j]) is not type('234'):
+            print(data.iloc[i, j])
             continue
         if 'Адрес' in data.iloc[i, j]:
             data = data[i:]
@@ -207,7 +207,8 @@ def optimization_data(data):
 
 def brute_force(index, columns):
     """Функция для поочередного перебора значений в массиве данных"""
-
+    if columns > 70:
+        columns = 70
     for i in range(index):
         for j in range(columns):
             yield i, j
