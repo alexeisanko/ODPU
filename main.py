@@ -129,16 +129,19 @@ def import_information(base, file_with_info):
     """Открывает файл с информацией после чего преобразовывает,
     считывает и заносит данные в файл baza.xlsx"""
 
+    # TODO сравнить скорость при открытие файла read_only=True и удаления лишних столбоц в pandas
     # Открыть нужный Excel файл с информацией и считать каждый лист
-    work_book = openpyxl.load_workbook(file_with_info, read_only=True)
+    work_book = openpyxl.load_workbook(file_with_info)
     for sheet in work_book:
         gc.collect()
         print('Считывается информация с файла ' + file_with_info.split('\\')[-1], sheet.title, sep=', ')
-        data = pd.DataFrame(sheet.values)
-
         # Если у листа мало столбцев, то есть пропускаем
-        if len(data.columns) < 40:
+        if sheet.max_column < 40:
             continue
+
+        sheet.delete_cols(idx=71, amount=(sheet.max_column - 71))
+        data = pd.DataFrame(sheet.values)
+        print(len(data.columns))
         data = optimization_data(data)
 
         # Если неправильный лист прошел отбор
@@ -158,10 +161,8 @@ def optimization_data(data):
      После чего фильтрует данные и оставляет только нужные столбцы (РЭС, Адрес, Объемы, № ПУ.
      Также при необходимости фильтрует тип потребителя (население и прриравненное к населению)"""
 
-# TODO Нужно исправить поиск по Адресу, так как он не всегда реагирует на проверку if is None
     for i, j in brute_force(len(data.index), len(data.columns)):
         if type(data.iloc[i, j]) is not type('234'):
-            print(data.iloc[i, j])
             continue
         if 'Адрес' in data.iloc[i, j]:
             data = data[i:]
@@ -207,8 +208,8 @@ def optimization_data(data):
 
 def brute_force(index, columns):
     """Функция для поочередного перебора значений в массиве данных"""
-    if columns > 70:
-        columns = 70
+    if columns > 50:
+        columns = 50
     for i in range(index):
         for j in range(columns):
             yield i, j
