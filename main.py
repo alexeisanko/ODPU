@@ -3,6 +3,7 @@ import pandas as pd
 import os
 import sys
 import gc
+import time
 
 
 def main_file():
@@ -134,7 +135,7 @@ def import_information(base, file_with_info):
     work_book = openpyxl.load_workbook(file_with_info)
     for sheet in work_book:
         gc.collect()
-        print('Считывается информация с файла ' + file_with_info.split('\\')[-1], sheet.title, sep=', ')
+        print('Считывается информация с файла ' + file_with_info.split('/')[-1], sheet.title, sep=', ')
         # Если у листа мало столбцев, то есть пропускаем
         if sheet.max_column < 40:
             continue
@@ -148,9 +149,22 @@ def import_information(base, file_with_info):
         if type(data) == str:
             print('Error. Wrong list')
             print('Ошибка считывания информации.')
-            print('Возможно программа ощибочно пытается считать файл {}, Лист {}.'.format(work_book, sheet))
-            input('нажмите любую клавишу для завершения программы')
-            sys.exit()
+            print('Возможно программа ощибочно пытается считать файл {}, Лист {}.'.format(file_with_info.split('/')[-1],
+                                                                                          sheet.title))
+            act = input('Просмотрите это лист. если программа ощибочно считывает его, введите "да" для его пропуска\n'
+                        'либо введите "нет" для завершения программы')
+            while act != 'да' and act != 'Да' and act != 'ДА' and act != 'нет' and act != 'Нет' and act != 'НЕТ':
+                print('Некорректно введено необходимое действие')
+                act = input(
+                    'Просмотрите это лист. если программа ощибочно считывает его, введите "да" для его пропуска\n'
+                    'либо введите "нет" для завершения программы')
+            else:
+                if act == 'да' or 'да' or 'ДА':
+                    continue
+                elif act == 'нет' or 'Нет' or 'НЕТ':
+                    print('Программа завершит свою работу через 5 секунд')
+                    time.sleep(5)
+                    sys.exit()
 
         base = enter_information(base, data)
     return base
@@ -162,7 +176,8 @@ def optimization_data(data):
      Также при необходимости фильтрует тип потребителя (население и прриравненное к населению)"""
 
     for i, j in brute_force(len(data.index), len(data.columns)):
-        if type(data.iloc[i, j]) is not type('234'):
+        if type(data.iloc[i, j]) is not str:
+            print(data.iloc[i, j])
             continue
         if 'Адрес' in data.iloc[i, j]:
             data = data[i:]
