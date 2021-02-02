@@ -133,17 +133,16 @@ def import_information(base, file_with_info):
     # TODO сравнить скорость при открытие файла read_only=True и удаления лишних столбоц в pandas
     # Открыть нужный Excel файл с информацией и считать каждый лист
     print("Загрузка файла " + file_with_info.split('/')[-1])
-    work_book = openpyxl.load_workbook(file_with_info, read_only=True)
+    work_book = openpyxl.load_workbook(file_with_info)
     for sheet in work_book:
         gc.collect()
         print('Считывается информация с загруженного файла, Лист: ' + sheet.title)
         # Если у листа мало столбцев, то есть пропускаем
         if sheet.max_column < 40:
             continue
-        elif sheet.max_column > 72:
-            data = pd.DataFrame(sheet.columns(1))
-        else:
-            data = pd.DataFrame(sheet.values)
+
+        sheet.delete_cols(idx=71, amount=(sheet.max_column - 71))
+        data = pd.DataFrame(sheet.values)
         data = optimization_data(data)
 
         # Если неправильный лист прошел отбор
