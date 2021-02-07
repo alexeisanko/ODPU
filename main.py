@@ -131,14 +131,12 @@ def import_information(base, file_with_info):
     """Открывает файл с информацией после чего преобразовывает,
     считывает и заносит данные в файл baza.xlsx"""
 
-
     # Открыть нужный Excel файл с информацией и считать каждый лист
     print("Загрузка файла " + file_with_info.split('/')[-1])
     work_book = openpyxl.load_workbook(file_with_info, read_only=True)
     for sheet in work_book:
         gc.collect()
         print('Считывается информация с загруженного файла, Лист: ' + sheet.title)
-        print(sheet.max_column)
         # Если у листа мало столбцев, то есть пропускаем
         if sheet.max_column < 40:
             continue
@@ -170,7 +168,6 @@ def import_information(base, file_with_info):
                     print('Программа завершит свою работу через 5 секунд')
                     time.sleep(5)
                     sys.exit()
-
         base = enter_information(base, data)
     return base
 
@@ -249,12 +246,10 @@ def brute_force(index, columns):
 
 def enter_information(base, data):
     """Функция заполняет базу отсортированными данными"""
-
     position_district = find_position_district(base, data)
     for i in range(len(data.index)):
         if type(data.iloc[i, 1]) != str:
             continue
-        print('+')
         address_user = change_line(data.iloc[i, 1], True)
         flag = False
         for j in position_district:
@@ -268,10 +263,11 @@ def enter_information(base, data):
                     continue
             for g in base.iloc[j, 7]:
                 if g in address_user:
-                    if data.iloc[i, 3] is None or type(data.iloc[i, 3]) == str:
+                    try:
+                        base.iloc[j, 4] += int(data.iloc[i, 3])
+                    except Exception:
                         pass
-                    else:
-                        base.iloc[j, 4] += data.iloc[i, 3]
+# TODO Выводить на экран ячейку которую не смог посчитать в сумму
                     base.iloc[j, 3].add(data.iloc[i, 2])
                     data.iloc[i, 0] = None
                     # Можно это перенести в elif и сразу переносить в базу если не нашлось
