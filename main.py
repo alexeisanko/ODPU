@@ -4,6 +4,7 @@ import os
 import sys
 import gc
 import time
+import csv
 
 
 def main_file():
@@ -130,19 +131,21 @@ def import_information(base, file_with_info):
     """Открывает файл с информацией после чего преобразовывает,
     считывает и заносит данные в файл baza.xlsx"""
 
-    # TODO сравнить скорость при открытие файла read_only=True и удаления лишних столбоц в pandas
+
     # Открыть нужный Excel файл с информацией и считать каждый лист
     print("Загрузка файла " + file_with_info.split('/')[-1])
-    work_book = openpyxl.load_workbook(file_with_info)
+    work_book = openpyxl.load_workbook(file_with_info, read_only=True)
     for sheet in work_book:
         gc.collect()
         print('Считывается информация с загруженного файла, Лист: ' + sheet.title)
+        print(sheet.max_column)
         # Если у листа мало столбцев, то есть пропускаем
         if sheet.max_column < 40:
             continue
-
-        sheet.delete_cols(idx=71, amount=(sheet.max_column - 71))
-        data = pd.DataFrame(sheet.values)
+        if sheet.max_column > 80:
+            data = excel_to_csv(sheet)
+        else:
+            data = pd.DataFrame(sheet.values)
         data = optimization_data(data)
 
         # Если неправильный лист прошел отбор
@@ -170,6 +173,17 @@ def import_information(base, file_with_info):
 
         base = enter_information(base, data)
     return base
+
+
+def excel_to_csv(sheet_in_excel):
+    """Для возможности считывания больших файлов слабым компьютером, осущесвляет перевод формата xlsx в csv"""
+    with open('myfile.csv', 'w') as out:
+        writer = csv.writer(out)
+        for row in sheet_in_excel:
+            values = (cell.value for cell in row[:71])
+            writer.writerow(values)
+    sheet_in_csv = pd.read_csv('myfile.csv', dtype=object)
+    return sheet_in_csv
 
 
 def optimization_data(data):
@@ -238,8 +252,9 @@ def enter_information(base, data):
 
     position_district = find_position_district(base, data)
     for i in range(len(data.index)):
-        if data.iloc[i, 1] is None:
+        if type(data.iloc[i, 1]) != str:
             continue
+        print('+')
         address_user = change_line(data.iloc[i, 1], True)
         flag = False
         for j in position_district:
@@ -323,10 +338,10 @@ def enter_in_excel(wb_in, data_out):
 
 print('Запуск программы')
 print('Программа запущена. Version 1.02')
-key_input = input('''Нажмите:
+key_input = input('''Введите:
       help для для получения справки о программе
       n для выхода из программы
-      любую другую кнопку для запуска программы
+      любую другую кнопку (или просто нажмите Enter для запуска программы
       ''')
 if key_input == 'help':
     print('''Программа будет запрашивать путь к данным. необходимо указывать путь к папке 
@@ -374,9 +389,9 @@ print('Вся информация подготовлена')
 print('Начата запись данных в итоговый файл')
 sheet_in = make_excel()
 enter_in_excel(sheet_in, base_for_fill)
-minute = (time.time() - start) // 60
-second = (time.time() - start) % 60
+minute = int((time.time() - start) // 60)
+second = int((time.time() - start) % 60)
 print('Программа завершила расчет. Время выполнения {0} мин. {1} c.'.format(minute, second))
 print('Вся информация внесена в файл Отчет.xlsx')
 print('Данный файл находится в каталоге программы')
-input('Нажмите любую кнопку для завершения программы')
+input('Введите любую кнопку для завершения программы')
