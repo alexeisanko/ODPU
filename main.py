@@ -178,9 +178,11 @@ def optimization_data(data):
      Также при необходимости фильтрует тип потребителя (население и прриравненное к населению)"""
 
     for i, j in brute_force(len(data.index), len(data.columns)):
-        if type(data.iloc[i, j]) is not str:
+        if i > 15:
+            return "Error. Wrong list"
+        elif type(data.iloc[i, j]) is not str:
             continue
-        if 'Адрес' in data.iloc[i, j]:
+        elif 'Адрес' in data.iloc[i, j]:
             data = data[i:]
             break
     for i in range(len(data.columns)):
@@ -363,7 +365,7 @@ print('Файл для записи подготовлен')
 files_for_import = find_files_with_information()
 print('Информация найдена')
 print('Запушен процесс подготовки инфомации')
-
+start = time.time()
 # Перебор файлов и импорт нужной информации
 for file in files_for_import:
     base_for_fill = import_information(base_for_fill, file)
@@ -372,6 +374,9 @@ print('Вся информация подготовлена')
 print('Начата запись данных в итоговый файл')
 sheet_in = make_excel()
 enter_in_excel(sheet_in, base_for_fill)
+minute = (time.time() - start) // 60
+second = (time.time() - start) % 60
+print('Программа завершила расчет. Время выполнения {0} мин. {1} c.'.format(minute, second))
 print('Вся информация внесена в файл Отчет.xlsx')
 print('Данный файл находится в каталоге программы')
 input('Нажмите любую кнопку для завершения программы')
