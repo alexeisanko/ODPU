@@ -127,7 +127,7 @@ def find_files_with_information():
     return files
 
 
-def import_information(base, file_with_info):
+def import_information(base, file_with_info, unreported):
     """Открывает файл с информацией после чего преобразовывает,
     считывает и заносит данные в файл baza.xlsx"""
 
@@ -168,8 +168,8 @@ def import_information(base, file_with_info):
                     print('Программа завершит свою работу через 5 секунд')
                     time.sleep(5)
                     sys.exit()
-        base = enter_information(base, data)
-    return base
+        base, unreported = enter_information(base, data, unreported)
+    return base, unreported
 
 
 def excel_to_csv(sheet_in_excel):
@@ -244,7 +244,7 @@ def brute_force(index, columns):
             yield i, j
 
 
-def enter_information(base, data):
+def enter_information(base, data, unreported):
     """Функция заполняет базу отсортированными данными"""
     position_district = find_position_district(base, data)
     for i in range(len(data.index)):
@@ -270,12 +270,14 @@ def enter_information(base, data):
 # TODO Выводить на экран ячейку которую не смог посчитать в сумму
                     base.iloc[j, 3].add(data.iloc[i, 2])
                     data.iloc[i, 0] = None
-                    # Можно это перенести в elif и сразу переносить в базу если не нашлось
                     flag = True
                     break
             if flag:
                 break
-    return base
+        if data.iloc[i, 0] is not None:
+            unreported.append({'РЭС': data.iloc[i, 0], 'Адреc': data.iloc[i, 1],
+                               'Номер счетчика': data.iloc[i, 2], 'Объем': data.iloc[i, 3]})
+    return base, unreported
 
 
 def find_position_district(base, data):
@@ -377,10 +379,13 @@ files_for_import = find_files_with_information()
 print('Информация найдена')
 print('Запушен процесс подготовки инфомации')
 start = time.time()
+unreported_address = []
 # Перебор файлов и импорт нужной информации
+
 for file in files_for_import:
-    base_for_fill = import_information(base_for_fill, file)
+    base_for_fill, unreported_address = import_information(base_for_fill, file, unreported_address)
     gc.collect()
+unreported_address = pd
 print('Вся информация подготовлена')
 print('Начата запись данных в итоговый файл')
 sheet_in = make_excel()
