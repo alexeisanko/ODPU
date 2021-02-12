@@ -349,6 +349,13 @@ def enter_in_excel(wb_in, data_out, data_unreported):
     return
 
 
+def reanalysis(base, unreported):
+    for i in range(len(unreported.index)):
+        for j in range(len(base.index)):
+            pass
+    return base, unreported
+
+
 print('Запуск программы')
 print('Программа запущена. Version 1.02')
 key_input = input('''Введите:
@@ -401,6 +408,16 @@ for file in files_for_import:
     gc.collect()
 unreported_address = pd.DataFrame(unreported_address)
 print('Вся информация подготовлена')
+print('Обращаем внимание, что программой необработанно {0} адресов'.format(len(unreported_address.columns)))
+print('В основном это связано с некорректным заполнением адреса ')
+print('Но бывают случаи когда программа ошибочно не обрабатывает адрес')
+print('Это обычно связано когда название н.п. входит в название районного центра (Пример "Поруб" и "СпасПоруб")')
+print('Для решение этой проблему предлагаю повторно проанализировать только неучтенные адреса по другому алгоритму')
+key_input = input('Для повторного анализа введите да \nДля пропуска данного пункта и продолжении программы')
+if key_input == 'ДА' or key_input == 'Да' or key_input == 'да' or key_input == 'дА':
+    base_for_fill, unreported_address = reanalysis(base_for_fill, unreported_address)
+else:
+    sys.exit()
 print('Начата запись данных в итоговый файл')
 sheet_in = make_excel()
 enter_in_excel(sheet_in, base_for_fill, unreported_address)
