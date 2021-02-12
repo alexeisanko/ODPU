@@ -350,10 +350,27 @@ def enter_in_excel(wb_in, data_out, data_unreported):
 
 
 def reanalysis(base, unreported):
+    """Повторно анализирует неучтенные адреса. Уже простым перебором без учета районного центра"""
+    new_unreported = []
     for i in range(len(unreported.index)):
+        address_user = change_line(unreported.iloc[i, 1], True)
         for j in range(len(base.index)):
-            pass
-    return base, unreported
+            if base.iloc[j, 0] is None:
+                continue
+            flag = False
+            for town in base.iloc[j, 7]:
+                if town in address_user:
+                    base.iloc[j, 4] += int(unreported.iloc[i, 3])
+                    base.iloc[j, 3].add(unreported.iloc[i, 2])
+                    unreported.iloc[i, 0] = None
+                    flag = True
+                    break
+            if flag:
+                break
+        if unreported.iloc[i, 0] is not None:
+            new_unreported.append({'РЭС': unreported.iloc[i, 0], 'Адреc': unreported.iloc[i, 1],
+                                   'Номер счетчика': unreported.iloc[i, 2], 'Объем': unreported.iloc[i, 3]})
+    return base, new_unreported
 
 
 print('Запуск программы')
@@ -408,7 +425,7 @@ for file in files_for_import:
     gc.collect()
 unreported_address = pd.DataFrame(unreported_address)
 print('Вся информация подготовлена')
-print('Обращаем внимание, что программой необработанно {0} адресов'.format(len(unreported_address.columns)))
+print('Обращаем внимание, что программой необработанно {0} адресов'.format(len(unreported_address.index)))
 print('В основном это связано с некорректным заполнением адреса ')
 print('Но бывают случаи когда программа ошибочно не обрабатывает адрес')
 print('Это обычно связано когда название н.п. входит в название районного центра (Пример "Поруб" и "СпасПоруб")')
@@ -416,8 +433,11 @@ print('Для решение этой проблему предлагаю пов
 key_input = input('Для повторного анализа введите да \nДля пропуска данного пункта и продолжении программы')
 if key_input == 'ДА' or key_input == 'Да' or key_input == 'да' or key_input == 'дА':
     base_for_fill, unreported_address = reanalysis(base_for_fill, unreported_address)
+    unreported_address = pd.DataFrame(unreported_address)
 else:
-    sys.exit()
+    pass
+print('Повторный анализ завершен. Осталось {0} неучтенных адресов'.format(len(unreported_address.index)))
+print('Все неучтенные адреса храняться в файле Отчет.xlsx, Лист "Неучтенные адреса"')
 print('Начата запись данных в итоговый файл')
 sheet_in = make_excel()
 enter_in_excel(sheet_in, base_for_fill, unreported_address)
