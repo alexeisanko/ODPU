@@ -316,11 +316,20 @@ def make_excel():
     ws_in.column_dimensions['C'].width = 23
     ws_in.column_dimensions['D'].width = 10
     ws_in.column_dimensions['E'].width = 15
+    ws_in_unreported = wb['Неучтенные адреса']
+    ws_in_unreported['A1'] = 'РЭС'
+    ws_in_unreported['B1'] = 'Адрес'
+    ws_in_unreported['C1'] = 'Номер счетчика'
+    ws_in_unreported['D1'] = 'Объем'
+    ws_in_unreported.column_dimensions['A'].width = 15
+    ws_in_unreported.column_dimensions['B'].width = 80
+    ws_in_unreported.column_dimensions['C'].width = 20
+    ws_in_unreported.column_dimensions['D'].width = 10
     wb.save('{}.xlsx'.format(name_book))
     return name_book
 
 
-def enter_in_excel(wb_in, data_out):
+def enter_in_excel(wb_in, data_out, data_unreported):
     """Вносит всю подготовленную информацию в созданный Excel"""
     wb = openpyxl.load_workbook(os.path.abspath('{}.xlsx'.format(wb_in)))
     ws_in = wb.worksheets[0]
@@ -330,6 +339,12 @@ def enter_in_excel(wb_in, data_out):
         ws_in['D{0}'.format(row)] = data_out.iloc[row - 2, 4]
         data_out.iloc[row - 2, 3] = len(data_out.iloc[row - 2, 3])
         ws_in['E{0}'.format(row)] = data_out.iloc[row - 2, 3]
+    ws_in_unreported = wb.worksheets[1]
+    for row in range(0, len(data_unreported.index)):
+        ws_in_unreported['A{0}'.format(row + 2)] = data_unreported.iloc[row, 0]
+        ws_in_unreported['B{0}'.format(row + 2)] = data_unreported.iloc[row, 1]
+        ws_in_unreported['C{0}'.format(row + 2)] = data_unreported.iloc[row, 2]
+        ws_in_unreported['D{0}'.format(row + 2)] = data_unreported.iloc[row, 3]
     wb.save('{}.xlsx'.format(wb_in))
     return
 
@@ -339,8 +354,7 @@ print('Программа запущена. Version 1.02')
 key_input = input('''Введите:
       help для для получения справки о программе
       n для выхода из программы
-      любую другую кнопку (или просто нажмите Enter для запуска программы
-      ''')
+      любую другую кнопку (или просто нажмите Enter для запуска программы\n''')
 if key_input == 'help':
     print('''Программа будет запрашивать путь к данным. необходимо указывать путь к папке 
     где хранятся все данные которые хотите посчитать. !!Если в указанной папке файлы с данными будут находиться 
@@ -385,11 +399,11 @@ unreported_address = []
 for file in files_for_import:
     base_for_fill, unreported_address = import_information(base_for_fill, file, unreported_address)
     gc.collect()
-unreported_address = pd
+unreported_address = pd.DataFrame(unreported_address)
 print('Вся информация подготовлена')
 print('Начата запись данных в итоговый файл')
 sheet_in = make_excel()
-enter_in_excel(sheet_in, base_for_fill)
+enter_in_excel(sheet_in, base_for_fill, unreported_address)
 minute = int((time.time() - start) // 60)
 second = int((time.time() - start) % 60)
 print('Программа завершила расчет. Время выполнения {0} мин. {1} c.'.format(minute, second))
